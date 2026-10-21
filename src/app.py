@@ -11,6 +11,11 @@ from fastapi.responses import RedirectResponse
 import os
 from pathlib import Path
 from .backend import routers, database
+import logging
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from pymongo.errors import PyMongoError
 
 # Initialize web host
 app = FastAPI(
@@ -33,3 +38,16 @@ def root():
 # Include routers
 app.include_router(routers.activities.router)
 app.include_router(routers.auth.router)
+app.include_router(routers.announcements.router)
+
+
+@app.exception_handler(PyMongoError)
+async def database_error(request: Request, error: PyMongoError):
+    logging.getLogger(__name__).error("Database operation failed", exc_info=error)
+    return JSONResponse(status_code=503, content={"detail": "Service temporarily unavailable"})
+
+
+@app.exception_handler(RequestValidationError)
+async def invalid_request(request: Request, error: RequestValidationError):
+    logging.getLogger(__name__).warning("Invalid request to %s", request.url.path)
+    return JSONResponse(status_code=422, content={"detail": "Invalid input"})
