@@ -24,6 +24,251 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
+  const announcementsDialog = document.getElementById("announcements-dialog");
+  const manageAnnouncements = document.getElementById("manage-announcements");
+  const announcementForm = document.getElementById("announcement-form");
+  const announcementFields = document.getElementById("announcement-fields");
+  const announcementMessage = document.getElementById("announcement-message");
+  const announcementStart = document.getElementById("announcement-start");
+  const announcementExpiration = document.getElementById("announcement-expiration");
+  const announcementList = document.getElementById("announcement-list");
+  const announcementFeedback = document.getElementById("announcement-feedback");
+  let announcements = [];
+  let editingAnnouncementId = null;
+  let announcementDirty = false;
+  let announcementBusy = false;
+
+  function refreshIcons() {
+    window.lucide?.createIcons();
+  }
+
+  function noticeFeedback(message, isError = false) {
+    announcementFeedback.textContent = message;
+    announcementFeedback.classList.toggle("is-error", isError);
+  }
+
+  async function announcementRequest(path = "", options = {}) {
+    const response = await fetch(`/announcements${path}`, options);
+    if (response.status === 401) {
+      currentUser = null;
+      updateAuthUI();
+      showMessage("Your session has ended. Please sign in again.", "info");
+      throw new Error("Please sign in again.");
+    }
+    if (!response.ok) throw new Error("Unable to complete this request. Please try again.");
+    return response.status === 204 ? null : response.json();
+  }
+
+  async function fetchAnnouncements() {
+    const banner = document.getElementById("announcements-banner");
+    try {
+      const notices = await announcementRequest();
+      const list = document.getElementById("announcements-public-list");
+      list.replaceChildren();
+      notices.forEach((notice) => {
+        const item = document.createElement("li");
+        item.textContent = notice.message;
+        list.appendChild(item);
+      });
+      banner.classList.toggle("hidden", notices.length === 0);
+    } catch (error) {
+      banner.classList.add("hidden");
+      console.error("Unable to load announcements:", error);
+    }
+  }
+
+  function resetAnnouncementForm(notice = null) {
+    editingAnnouncementId = notice?.id ?? null;
+    announcementForm.reset();
+    announcementMessage.value = notice?.message ?? "";
+    announcementStart.value = notice?.starts_on ?? "";
+    announcementExpiration.value = notice?.expires_on ?? "";
+    announcementStart.setCustomValidity("");
+    announcementMessage.setCustomValidity("");
+    document.getElementById("announcement-editor-title").textContent = notice ? "Edit Announcement" : "New Announcement";
+    document.getElementById("save-announcement").textContent = notice ? "Save Changes" : "Publish Announcement";
+    document.getElementById("announcement-character-count").textContent = `${announcementMessage.value.length} / 2,000`;
+    announcementDirty = false;
+    renderAnnouncementList();
+  }
+
+  function canDiscardAnnouncement() {
+    return !announcementBusy && (!announcementDirty || window.confirm("Discard your unsaved changes?"));
+  }
+
+  function formatNoticeDate(value) {
+    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
+  }
+
+  function renderAnnouncementList() {
+    announcementList.replaceChildren();
+    document.getElementById("announcement-count").textContent = announcements.length;
+    if (!announcements.length) {
+      const empty = document.createElement("p");
+      empty.className = "notice-empty";
+      empty.textContent = "No announcements yet.";
+      announcementList.appendChild(empty);
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    announcements.forEach((notice) => {
+      const item = document.createElement("article");
+      item.className = "notice-item";
+      item.classList.toggle("is-editing", notice.id === editingAnnouncementId);
+      const state = notice.expires_on < today ? "Expired" : notice.starts_on && notice.starts_on > today ? "Scheduled" : "Active";
+      const badge = document.createElement("span");
+      badge.className = `notice-status ${state.toLowerCase()}`;
+      badge.textContent = state;
+      const message = document.createElement("p");
+      message.className = "notice-message";
+      message.textContent = notice.message;
+      const dates = document.createElement("p");
+      dates.className = "notice-dates";
+      dates.textContent = `${notice.starts_on ? formatNoticeDate(notice.starts_on) : "Immediately"} - ${formatNoticeDate(notice.expires_on)}`;
+      const actions = document.createElement("div");
+      actions.className = "notice-actions";
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "quiet-button";
+      edit.innerHTML = '<i data-lucide="pencil" aria-hidden="true"></i> Edit';
+      edit.disabled = announcementBusy;
+      edit.addEventListener("click", () => {
+        if (!canDiscardAnnouncement()) return;
+        resetAnnouncementForm(notice);
+        noticeFeedback("");
+        announcementMessage.focus();
+      });
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "quiet-button danger-button";
+      remove.innerHTML = '<i data-lucide="trash-2" aria-hidden="true"></i> Delete';
+      remove.disabled = announcementBusy;
+      remove.addEventListener("click", () => {
+        if (!canDiscardAnnouncement()) return;
+        const confirmation = document.createElement("div");
+        confirmation.className = "notice-delete-confirmation";
+        confirmation.setAttribute("role", "group");
+        confirmation.setAttribute("aria-label", "Confirm deletion");
+        const prompt = document.createElement("p");
+        prompt.textContent = "Permanently delete this announcement?";
+        const cancel = document.createElement("button");
+        cancel.type = "button";
+        cancel.className = "quiet-button";
+        cancel.textContent = "Keep";
+        cancel.addEventListener("click", renderAnnouncementList);
+        const confirm = document.createElement("button");
+        confirm.type = "button";
+        confirm.className = "delete-notice-button";
+        confirm.textContent = "Delete Announcement";
+        confirm.addEventListener("click", () => deleteAnnouncement(notice.id));
+        confirmation.append(prompt, cancel, confirm);
+        actions.replaceWith(confirmation);
+        cancel.focus();
+      });
+      actions.append(edit, remove);
+      item.append(badge, message, dates, actions);
+      announcementList.appendChild(item);
+    });
+    refreshIcons();
+  }
+
+  function setAnnouncementBusy(busy) {
+    announcementBusy = busy;
+    announcementFields.disabled = busy;
+    document.getElementById("new-announcement").disabled = busy;
+    document.getElementById("close-announcements").disabled = busy;
+    announcementList.setAttribute("aria-busy", String(busy));
+    announcementList.querySelectorAll("button").forEach((button) => { button.disabled = busy; });
+  }
+
+  async function loadManagedAnnouncements() {
+    announcements = await announcementRequest("/manage");
+    renderAnnouncementList();
+  }
+
+  manageAnnouncements.addEventListener("click", async () => {
+    if (!currentUser) return;
+    announcements = [];
+    resetAnnouncementForm();
+    announcementsDialog.showModal();
+    setAnnouncementBusy(true);
+    noticeFeedback("Loading announcements...");
+    try {
+      await loadManagedAnnouncements();
+      noticeFeedback("");
+    } catch (error) {
+      noticeFeedback(error.message, true);
+    } finally {
+      setAnnouncementBusy(false);
+    }
+  });
+
+  function closeAnnouncementDialog() {
+    if (canDiscardAnnouncement()) announcementsDialog.close();
+  }
+
+  document.getElementById("close-announcements").addEventListener("click", closeAnnouncementDialog);
+  announcementsDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeAnnouncementDialog();
+  });
+  announcementsDialog.addEventListener("close", () => manageAnnouncements.focus());
+  document.getElementById("new-announcement").addEventListener("click", () => {
+    if (!canDiscardAnnouncement()) return;
+    resetAnnouncementForm();
+    noticeFeedback("");
+    announcementMessage.focus();
+  });
+  document.getElementById("cancel-announcement-edit").addEventListener("click", () => {
+    if (canDiscardAnnouncement()) resetAnnouncementForm();
+  });
+  announcementForm.addEventListener("input", () => {
+    announcementDirty = true;
+    announcementMessage.setCustomValidity(announcementMessage.value.trim() ? "" : "Enter a message.");
+    announcementStart.setCustomValidity(announcementStart.value && announcementExpiration.value && announcementStart.value > announcementExpiration.value ? "Start date must be on or before expiration." : "");
+    document.getElementById("announcement-character-count").textContent = `${announcementMessage.value.length} / 2,000`;
+  });
+  announcementForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!announcementForm.reportValidity() || announcementBusy) return;
+    setAnnouncementBusy(true);
+    noticeFeedback("Saving announcement...");
+    try {
+      const wasEditing = Boolean(editingAnnouncementId);
+      const saved = await announcementRequest(editingAnnouncementId ? `/${encodeURIComponent(editingAnnouncementId)}` : "", {
+        method: wasEditing ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: announcementMessage.value.trim(), starts_on: announcementStart.value || null, expires_on: announcementExpiration.value }),
+      });
+      announcements = [saved, ...announcements.filter((notice) => notice.id !== saved.id)];
+      resetAnnouncementForm();
+      noticeFeedback(wasEditing ? "Changes saved." : "Announcement published.");
+      await fetchAnnouncements();
+    } catch (error) {
+      noticeFeedback(error.message, true);
+    } finally {
+      setAnnouncementBusy(false);
+    }
+  });
+
+  async function deleteAnnouncement(id) {
+    setAnnouncementBusy(true);
+    noticeFeedback("Deleting announcement...");
+    try {
+      await announcementRequest(`/${encodeURIComponent(id)}`, { method: "DELETE" });
+      announcements = announcements.filter((notice) => notice.id !== id);
+      resetAnnouncementForm();
+      noticeFeedback("Announcement deleted.");
+      await fetchAnnouncements();
+    } catch (error) {
+      noticeFeedback(error.message, true);
+    } finally {
+      setAnnouncementBusy(false);
+    }
+  }
+
+  refreshIcons();
+  fetchAnnouncements();
+  setInterval(fetchAnnouncements, 60000);
 
   // Activity categories with corresponding colors
   const activityTypes = {
@@ -100,40 +345,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Check if user is already logged in (from localStorage)
   function checkAuthentication() {
-    const savedUser = localStorage.getItem("currentUser");
-    if (savedUser) {
-      try {
-        currentUser = JSON.parse(savedUser);
-        updateAuthUI();
-        // Verify the stored user with the server
-        validateUserSession(currentUser.username);
-      } catch (error) {
-        console.error("Error parsing saved user", error);
-        logout(); // Clear invalid data
-      }
-    }
-
-    // Set authentication class on body
+    localStorage.removeItem("currentUser");
+    validateUserSession();
     updateAuthBodyClass();
   }
 
   // Validate user session with the server
-  async function validateUserSession(username) {
+  async function validateUserSession() {
     try {
       const response = await fetch(
-        `/auth/check-session?username=${encodeURIComponent(username)}`
+        "/auth/check-session"
       );
 
       if (!response.ok) {
         // Session invalid, log out
-        logout();
+        currentUser = null;
+        updateAuthUI();
         return;
       }
 
       // Session is valid, update user data
       const userData = await response.json();
       currentUser = userData;
-      localStorage.setItem("currentUser", JSON.stringify(userData));
       updateAuthUI();
     } catch (error) {
       console.error("Error validating session:", error);
@@ -150,6 +383,9 @@ document.addEventListener("DOMContentLoaded", () => {
       loginButton.classList.remove("hidden");
       userInfo.classList.add("hidden");
       displayName.textContent = "";
+      if (announcementsDialog.open) announcementsDialog.close();
+      announcements = [];
+      resetAnnouncementForm();
     }
 
     updateAuthBodyClass();
@@ -170,11 +406,11 @@ document.addEventListener("DOMContentLoaded", () => {
   async function login(username, password) {
     try {
       const response = await fetch(
-        `/auth/login?username=${encodeURIComponent(
-          username
-        )}&password=${encodeURIComponent(password)}`,
+        "/auth/login",
         {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
         }
       );
 
@@ -182,7 +418,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!response.ok) {
         showLoginMessage(
-          data.detail || "Invalid username or password",
+          "Unable to sign in. Check your credentials and try again.",
           "error"
         );
         return false;
@@ -190,7 +426,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Login successful
       currentUser = data;
-      localStorage.setItem("currentUser", JSON.stringify(data));
       updateAuthUI();
       closeLoginModalHandler();
       showMessage(`Welcome, ${currentUser.display_name}!`, "success");
@@ -203,11 +438,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Logout function
-  function logout() {
-    currentUser = null;
-    localStorage.removeItem("currentUser");
-    updateAuthUI();
-    showMessage("You have been logged out.", "info");
+  async function logout() {
+    logoutButton.disabled = true;
+    try {
+      const response = await fetch("/auth/logout", { method: "POST" });
+      if (!response.ok && response.status !== 401) throw new Error("Logout failed");
+      currentUser = null;
+      updateAuthUI();
+      showMessage("You have been logged out.", "info");
+    } catch (error) {
+      showMessage("Unable to sign out. Please try again.", "error");
+    } finally {
+      logoutButton.disabled = false;
+    }
   }
 
   // Show message in login modal
