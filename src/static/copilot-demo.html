@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Explore the GitHub Copilot app features announced at Universe 2026."
+    />
+    <title>GitHub Copilot app — Universe 2026</title>
+    <link rel="stylesheet" href="copilot-demo.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Mergington High School home">
+        <span class="brand-mark" aria-hidden="true">⌂</span>
+        <span>GitHub Copilot <span class="brand-muted">app</span></span>
+      </a>
+      <span class="event-label"><span class="live-dot"></span> UNIVERSE 2026</span>
+      <a class="back-link" href="index.html">Back to activities</a>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <p class="eyebrow">A new home for agentic work</p>
+        <h1 id="hero-title">From a goal to <span>work shipped.</span></h1>
+        <p class="hero-copy">
+          Bring your context, tools, and agents together. See how the GitHub Copilot app
+          helps you direct the work while Copilot handles the handoffs.
+        </p>
+        <a class="primary-link" href="#goal">Explore the demo <span aria-hidden="true">↓</span></a>
+        <p class="demo-note">Interactive product concept · All actions are simulated</p>
+      </section>
+
+      <div class="demo-layout">
+        <nav class="step-nav" aria-label="Demo sections">
+          <p class="nav-label">IN THIS DEMO</p>
+          <a href="#goal" class="step-link is-active" aria-current="step">
+            <span class="step-number">01</span><span>Give Copilot a goal</span>
+          </a>
+          <a href="#context" class="step-link">
+            <span class="step-number">02</span><span>Handle the work around your code</span>
+          </a>
+          <a href="#desktop" class="step-link">
+            <span class="step-number">03</span><span>Let Copilot work with your desktop apps</span>
+          </a>
+          <a href="#get-started" class="step-link">
+            <span class="step-number">04</span><span>Get started</span>
+          </a>
+        </nav>
+
+        <div class="demo-content">
+          <section id="goal" class="demo-section" aria-labelledby="goal-title">
+            <div class="section-heading">
+              <span class="section-number">01</span>
+              <div>
+                <p class="eyebrow">Set direction, keep the context</p>
+                <h2 id="goal-title">Give Copilot a goal</h2>
+                <p>Start a project with an outcome. Add the repositories and resources Copilot needs, then let agents work in parallel.</p>
+              </div>
+            </div>
+
+            <div class="project-window">
+              <div class="window-bar">
+                <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span>New project</span>
+                <span class="window-status"><span class="live-dot"></span> Ready</span>
+              </div>
+              <form id="goal-form" class="goal-form">
+                <label for="project-goal">What do you want to get done?</label>
+                <textarea id="project-goal" rows="2" maxlength="240">Prepare a launch plan for the new team dashboard</textarea>
+                <div class="project-context">
+                  <span class="context-label">PROJECT CONTEXT</span>
+                  <span class="context-chip"><span aria-hidden="true">⌘</span> dashboard-web</span>
+                  <span class="context-chip"><span aria-hidden="true">⌘</span> design-system</span>
+                  <button type="button" class="text-button" id="add-context">+ Add context</button>
+                </div>
+                <div class="form-footer">
+                  <span class="model-choice"><span class="sparkle" aria-hidden="true">✦</span> Models &amp; tools selected for the task</span>
+                  <button class="primary-button" type="submit">Start project <span aria-hidden="true">→</span></button>
+                </div>
+              </form>
+
+              <div id="project-result" class="project-result" aria-live="polite">
+                <div class="result-topline">
+                  <strong>Project workspace</strong>
+                  <span class="result-badge">READY WHEN YOU ARE</span>
+                </div>
+                <div class="agent-row">
+                  <span class="agent-icon agent-purple" aria-hidden="true">✦</span>
+                  <span><strong>Research agent</strong><small>Reviewing project context</small></span>
+                  <span class="agent-state">Ready</span>
+                </div>
+                <div class="agent-row">
+                  <span class="agent-icon agent-green" aria-hidden="true">⌘</span>
+                  <span><strong>Implementation agent</strong><small>Working across repositories</small></span>
+                  <span class="agent-state">Ready</span>
+                </div>
+                <div class="agent-row">
+                  <span class="agent-icon agent-orange" aria-hidden="true">✓</span>
+                  <span><strong>Review</strong><small>Results come back for your review</small></span>
+                  <span class="agent-state">Your call</span>
+                </div>
+              </div>
+            </div>
+            <p class="section-footnote">For a focused task in one repository, you can still start a session directly from that repository.</p>
+          </section>
+
+          <section id="context" class="demo-section" aria-labelledby="context-title">
+            <div class="section-heading">
+              <span class="section-number">02</span>
+              <div>
+                <p class="eyebrow">The work around your code</p>
+                <h2 id="context-title">Bring the whole picture</h2>
+                <p>Research requests and shape plans with context from connected tools—not just code in a repository.</p>
+              </div>
+            </div>
+
+            <div class="context-grid">
+              <article class="surface-card">
+                <div class="card-heading">
+                  <div><p class="card-kicker">CONNECTED CONTEXT</p><h3>Tools for the work</h3></div>
+                  <span class="subtle-status">Illustrative</span>
+                </div>
+                <p class="card-copy">Add useful sources to a project so agents can understand the request before they start.</p>
+                <div class="tool-row">
+                  <span class="tool-logo slack" aria-hidden="true">✳</span>
+                  <span class="tool-name"><strong>Slack</strong><small>Design kickoff thread</small></span>
+                  <button type="button" class="connect-button is-connected" aria-pressed="true">Added</button>
+                </div>
+                <div class="tool-row">
+                  <span class="tool-logo figma" aria-hidden="true">◈</span>
+                  <span class="tool-name"><strong>Figma</strong><small>Dashboard mockups</small></span>
+                  <button type="button" class="connect-button" aria-pressed="false">Add</button>
+                </div>
+                <div class="tool-row">
+                  <span class="tool-logo notes" aria-hidden="true">▤</span>
+                  <span class="tool-name"><strong>Meeting notes</strong><small>Launch requirements</small></span>
+                  <button type="button" class="connect-button" aria-pressed="false">Add</button>
+                </div>
+                <p id="context-feedback" class="inline-feedback" aria-live="polite">One source added to this sample project.</p>
+              </article>
+
+              <article class="automation-card">
+                <span class="automation-icon" aria-hidden="true">↻</span>
+                <p class="card-kicker">PROJECT AUTOMATIONS</p>
+                <h3>Make repeatable work automatic</h3>
+                <p>Set up a workflow for recurring work—like creating a promo video whenever a feature lands.</p>
+                <button type="button" class="secondary-button" id="automation-button">Preview automation <span aria-hidden="true">→</span></button>
+                <p id="automation-feedback" class="automation-feedback" aria-live="polite"></p>
+              </article>
+            </div>
+          </section>
+
+          <section id="desktop" class="demo-section" aria-labelledby="desktop-title">
+            <div class="section-heading">
+              <span class="section-number">03</span>
+              <div>
+                <p class="eyebrow">Work beyond the browser</p>
+                <h2 id="desktop-title">Let Copilot work with your desktop apps</h2>
+                <p>When a task needs a desktop app, Copilot can use your computer to carry work through—while you stay in control.</p>
+              </div>
+            </div>
+
+            <div class="desktop-window">
+              <div class="desktop-copy">
+                <p class="card-kicker">COMPUTER USE · DEMO</p>
+                <h3>From a design handoff to a finished update</h3>
+                <p>See a sample sequence across a design canvas and a browser. This preview does not access your computer or external apps.</p>
+                <button type="button" class="primary-button" id="desktop-button">Run sample handoff <span aria-hidden="true">→</span></button>
+                <p id="desktop-feedback" class="desktop-feedback" aria-live="polite">Waiting for you to start the sample.</p>
+              </div>
+              <div class="desktop-preview" aria-label="Illustration of a design app and browser">
+                <div class="app-window design-window">
+                  <div class="mini-window-bar"><span class="figma-dot"></span> Design canvas <span>•••</span></div>
+                  <div class="design-canvas">
+                    <div class="design-sidebar"><i></i><i></i><i></i><i></i></div>
+                    <div class="mock-screen"><span></span><i></i><i></i><b></b><b></b></div>
+                  </div>
+                </div>
+                <div class="app-window browser-window">
+                  <div class="mini-window-bar"><span class="browser-dots">● ● ●</span> Preview</div>
+                  <div class="browser-canvas"><span class="preview-label">YOUR UPDATE</span><b>Ready for review.</b><i></i><i></i><span class="preview-button"></span></div>
+                </div>
+                <span class="handoff-arrow" aria-hidden="true">↗</span>
+              </div>
+            </div>
+            <p class="section-footnote">Computer use may require Accessibility and Screen Recording permissions in the Copilot app.</p>
+          </section>
+
+          <section id="get-started" class="get-started-section" aria-labelledby="started-title">
+            <span class="section-number">04</span>
+            <p class="eyebrow">Your next step</p>
+            <h2 id="started-title">Get started with the Copilot app</h2>
+            <p>Explore the announcement and documentation for availability, setup, and the latest details.</p>
+            <a class="primary-button announcement-link" href="https://github.blog/changelog/2026-10-28-github-copilot-app-universe-releases/" target="_blank" rel="noopener noreferrer">
+              Read the Universe 2026 announcement <span aria-hidden="true">↗</span>
+            </a>
+            <p class="disclaimer">This interactive page is a product demo concept. It does not connect to GitHub Copilot or third-party services.</p>
+          </section>
+          <footer class="demo-footer">GitHub Copilot app · Universe 2026</footer>
+        </div>
+      </div>
+    </main>
+    <script src="copilot-demo.js"></script>
+  </body>
+</html>

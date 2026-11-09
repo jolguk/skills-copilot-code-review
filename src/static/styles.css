@@ -73,6 +73,15 @@ header h2 {
   font-size: 1.2rem;
 }
 
+header .copilot-demo-link {
+  margin-top: 8px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 main {
   display: flex;
   flex-wrap: wrap;

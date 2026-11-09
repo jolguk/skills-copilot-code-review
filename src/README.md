@@ -8,6 +8,11 @@ A super simple FastAPI application that allows students to view and sign up for 
 - Sign up for activities
 - View current school announcements
 - Sign in as a teacher to publish, schedule, edit, and delete announcements
+- Explore an interactive demo of the GitHub Copilot app features announced at Universe 2026
+
+Open `/static/copilot-demo.html` to view the standalone demo. Its sections follow the
+Universe 2026 Copilot app announcement order: give Copilot a goal, handle the work
+around your code, use desktop apps, and get started. Demo interactions are simulated.
 
 ## Getting Started
 
